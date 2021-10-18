@@ -1,0 +1,36 @@
+{
+  "rules": {
+    "users": {
+      ".read": "auth.uid != null",
+      "$userId": {
+        ".read": "$userId == auth.uid",
+        ".write": "$userId == auth.uid && data.exists() && newData.exists()"
+      }
+    },
+    "data": {
+      "list": {
+        ".read": "auth.uid != null",
+        "$resourceId": {
+          ".write": "( !data.exists() && newData.exists() && root.child('data').child($resourceId).exists() ) || ( data.exists() && !newData.exists() && root.child('acl').child($resourceId).child('delete').child(auth.uid).exists() )",
+          ".validate": "$resourceId == newData.child('id').val()"
+        }
+      },
+      "$resourceId": {
+        ".read": "root.child('acl').child($resourceId).child('read').child(auth.uid).exists()",
+        ".write": "( !data.exists() && newData.exists() && newData.child('createdBy').val() == auth.uid ) || ( data.exists() && newData.exists() && root.child('acl').child($resourceId).child('update').child(auth.uid).exists() ) || ( data.exists() && !newData.exists() && root.child('acl').child($resourceId).child('delete').child(auth.uid).exists() )",
+        ".validate": "$resourceId == newData.child('id').val()"
+      }
+    },
+    "acl": {
+      "$resourceId": {
+        ".read": "root.child('acl').child($resourceId).child('admin').child(auth.uid).exists()",
+        ".write": "root.child('acl').child($resourceId).child('admin').child(auth.uid).exists()",
+        "$action": {
+          "$userId": {
+            ".read": "$userId == auth.uid"
+          }
+        }
+      }
+    }
+  }
+}
